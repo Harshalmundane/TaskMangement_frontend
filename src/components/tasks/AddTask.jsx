@@ -67,8 +67,8 @@ const AddTask = ({ open, setOpen, task }) => {
     stage: "",
     priority: "",
     assets: [],
-    description: task?.description || "",
-    links: task?.links || "",
+    description: "",
+    links: "",
   };
   const {
     register,
