@@ -59,8 +59,8 @@ const Users = () => {
         setOpenDialog(false);
       }, 500);
     } catch (error) {
-      console.log(err);
-      toast.error(err?.data?.message || err.error);
+      console.log(error); // Fixed: was 'err'
+      toast.error(error?.data?.message || error.error);
     }
   };
 
@@ -78,8 +78,8 @@ const Users = () => {
         setOpenAction(false);
       }, 500);
     } catch (error) {
-      console.log(err);
-      toast.error(err?.data?.message || err.error);
+      console.log(error); // Fixed: was 'err'
+      toast.error(error?.data?.message || error.error);
     }
   };
 
@@ -94,6 +94,7 @@ const Users = () => {
         <th className='py-2'>Title</th>
         <th className='py-2'>Email</th>
         <th className='py-2'>Role</th>
+      
         <th className='py-2'>Active</th>
       </tr>
     </thead>
@@ -114,6 +115,7 @@ const Users = () => {
       <td className='p-2'>{user.title}</td>
       <td className='p-2'>{user.email}</td>
       <td className='p-2'>{user.role}</td>
+     
       <td>
         <button
           onClick={() => userStatusClick(user)}

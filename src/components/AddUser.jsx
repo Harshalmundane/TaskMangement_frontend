@@ -9,13 +9,16 @@ import { setCredentials } from "../redux/slices/authSlice";
 import { Button, Loading, ModalWrapper, Textbox } from "./";
 
 const AddUser = ({ open, setOpen, userData }) => {
-  let defaultValues = userData ?? {};
+  const isEdit = !!userData;
+  let defaultValues = isEdit ? { ...userData, isAdmin: userData?.isAdmin ? "yes" : "no" } : { isAdmin: "no" };
   const { user } = useSelector((state) => state.auth);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
+    reset,
   } = useForm({ defaultValues });
 
   const dispatch = useDispatch();
@@ -23,29 +26,41 @@ const AddUser = ({ open, setOpen, userData }) => {
   const [addNewUser, { isLoading }] = useRegisterMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
+  // Watch password for confirmation validation (only needed for create)
+  const password = watch("password");
+
   const handleOnSubmit = async (data) => {
     try {
-      if (userData) {
-        const res = await updateUser(data).unwrap();
+      if (isEdit) {
+        // For updates: Exclude password fields, map isAdmin
+        const { password, confirmPassword, ...updateData } = data;
+        updateData.isAdmin = data.isAdmin === "yes";
+        const res = await updateUser(updateData).unwrap();
         toast.success(res?.message);
         if (userData?._id === user?._id) {
           dispatch(setCredentials({ ...res?.user }));
         }
       } else {
-        const res = await addNewUser({
-          ...data,
-          password: data?.email,
-        }).unwrap();
+        // For creation: Include actual password, map isAdmin
+        const { confirmPassword, ...createData } = data;
+        createData.isAdmin = data.isAdmin === "yes";
+        const res = await addNewUser(createData).unwrap();
         toast.success("New User added successfully");
       }
 
       setTimeout(() => {
         setOpen(false);
+        reset();
       }, 1500);
     } catch (err) {
       console.log(err);
       toast.error(err?.data?.message || err.error);
     }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    reset();
   };
 
   return (
@@ -56,7 +71,7 @@ const AddUser = ({ open, setOpen, userData }) => {
             as='h2'
             className='text-base font-bold leading-6 text-gray-900 mb-4'
           >
-            {userData ? "UPDATE PROFILE" : "ADD NEW USER"}
+            {isEdit ? "UPDATE PROFILE" : "ADD NEW USER"}
           </Dialog.Title>
           <div className='mt-2 flex flex-col gap-6'>
             <Textbox
@@ -104,6 +119,72 @@ const AddUser = ({ open, setOpen, userData }) => {
               })}
               error={errors.role ? errors.role.message : ""}
             />
+
+            {/* Admin Radio Buttons */}
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Is Admin?
+              </label>
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="yes"
+                    {...register("isAdmin", {
+                      required: "Please select admin status!",
+                    })}
+                    className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Yes</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="no"
+                    {...register("isAdmin", {
+                      required: "Please select admin status!",
+                    })}
+                    className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">No</span>
+                </label>
+              </div>
+              {errors.isAdmin && (
+                <p className="text-red-500 text-sm mt-1">{errors.isAdmin.message}</p>
+              )}
+            </div>
+
+            {!isEdit && (
+              <>
+                <Textbox
+                  placeholder='Create password'
+                  type='password'
+                  name='password'
+                  label='Password'
+                  className='w-full rounded'
+                  register={register("password", {
+                    required: "Password is required!",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters!",
+                    },
+                  })}
+                  error={errors.password ? errors.password.message : ""}
+                />
+                <Textbox
+                  placeholder='Confirm password'
+                  type='password'
+                  name='confirmPassword'
+                  label='Confirm Password'
+                  className='w-full rounded'
+                  register={register("confirmPassword", {
+                    required: "Please confirm your password!",
+                    validate: (value) => value === password || "Passwords do not match!",
+                  })}
+                  error={errors.confirmPassword ? errors.confirmPassword.message : ""}
+                />
+              </>
+            )}
           </div>
 
           {isLoading || isUpdating ? (
@@ -121,7 +202,7 @@ const AddUser = ({ open, setOpen, userData }) => {
               <Button
                 type='button'
                 className='bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto'
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 label='Cancel'
               />
             </div>

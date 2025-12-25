@@ -3,36 +3,44 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button, Loading, Textbox } from "../components";
-import { useLoginMutation } from "../redux/slices/api/authApiSlice";
+import { useRegisterMutation } from "../redux/slices/api/authApiSlice";
 import { setCredentials } from "../redux/slices/authSlice";
 import { useEffect } from "react";
 
-const Login = () => {
+const Register = () => {
   const { user } = useSelector((state) => state.auth);
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm();
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [login, { isLoading }] = useLoginMutation();
+  const [registerUser, { isLoading }] = useRegisterMutation();
 
-  const handleLogin = async (data) => {
+  // Watch password for confirm password validation
+  const password = watch("password");
+
+  const handleRegister = async (data) => {
     try {
-      const res = await login(data).unwrap();
+      // Prepare data: Add defaults for admin-related fields if needed (backend handles defaults)
+      const registerData = {
+        ...data,
+        isAdmin: false, // Default for public sign-up
+        role: "user",   // Default role
+        title: "Member" // Default title
+      };
+
+      const res = await registerUser(registerData).unwrap();
 
       dispatch(setCredentials(res));
-      navigate("/");
+      toast.success("Account created successfully! Welcome aboard.");
+      navigate("/dashboard");
     } catch (err) {
-      toast.error(err?.data?.message || err.error);
+      toast.error(err?.data?.message || err.error || "Registration failed. Please try again.");
     }
-  };
-
-  const handleSignUp = (e) => {
-    e.preventDefault();
-    navigate('/sign-up');
   };
 
   useEffect(() => {
@@ -54,7 +62,7 @@ const Login = () => {
           <div className='inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-indigo-100 dark:border-gray-700'>
             <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse'></div>
             <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-              Your productivity hub
+              Join the productivity revolution
             </span>
           </div>
 
@@ -65,7 +73,7 @@ const Login = () => {
               </span>
             </h1>
             <p className='text-xl lg:text-2xl text-gray-600 dark:text-gray-400 font-light'>
-              Streamline your workflow,<br />amplify your success
+              Create your account,<br />unlock endless possibilities
             </p>
           </div>
 
@@ -74,37 +82,53 @@ const Login = () => {
               <svg className='w-5 h-5 text-indigo-600' fill='currentColor' viewBox='0 0 20 20'>
                 <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
               </svg>
-              <span className='text-sm'>Team Collaboration</span>
+              <span className='text-sm'>Seamless Onboarding</span>
             </div>
             <div className='flex items-center gap-2 text-gray-600 dark:text-gray-400'>
               <svg className='w-5 h-5 text-indigo-600' fill='currentColor' viewBox='0 0 20 20'>
                 <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
               </svg>
-              <span className='text-sm'>Real-time Sync</span>
+              <span className='text-sm'>Free to Start</span>
             </div>
             <div className='flex items-center gap-2 text-gray-600 dark:text-gray-400'>
               <svg className='w-5 h-5 text-indigo-600' fill='currentColor' viewBox='0 0 20 20'>
                 <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
               </svg>
-              <span className='text-sm'>Secure & Private</span>
+              <span className='text-sm'>24/7 Support</span>
             </div>
           </div>
         </div>
 
-        {/* Right side - Login Form */}
+        {/* Right side - Register Form */}
         <div className='w-full lg:w-auto lg:flex-shrink-0'>
           <div className='w-full md:w-[440px] bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 dark:border-gray-700'>
             <div className='space-y-2 mb-8'>
               <h2 className='text-3xl font-bold text-gray-900 dark:text-white'>
-                Welcome back
+                Create Account
               </h2>
               <p className='text-gray-500 dark:text-gray-400'>
-                Sign in to continue to your workspace
+                Join TaskFlow and supercharge your productivity
               </p>
             </div>
 
-            <form onSubmit={handleSubmit(handleLogin)} className='space-y-6'>
+            <form onSubmit={handleSubmit(handleRegister)} className='space-y-6'>
               <div className='space-y-4'>
+                <Textbox
+                  placeholder='Enter your full name'
+                  type='text'
+                  name='name'
+                  label='Full Name'
+                  className='w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 px-4 py-3 transition-colors'
+                  register={register("name", {
+                    required: "Full name is required!",
+                    minLength: {
+                      value: 2,
+                      message: "Name must be at least 2 characters long!",
+                    },
+                  })}
+                  error={errors.name ? errors.name.message : ""}
+                />
+                
                 <Textbox
                   placeholder='Enter your email'
                   type='email'
@@ -113,31 +137,49 @@ const Login = () => {
                   className='w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 px-4 py-3 transition-colors'
                   register={register("email", {
                     required: "Email Address is required!",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Please enter a valid email address!",
+                    },
                   })}
                   error={errors.email ? errors.email.message : ""}
                 />
                 
                 <Textbox
-                  placeholder='Enter your password'
+                  placeholder='Create a password'
                   type='password'
                   name='password'
                   label='Password'
                   className='w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 px-4 py-3 transition-colors'
                   register={register("password", {
                     required: "Password is required!",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters long!",
+                    },
                   })}
-                  error={errors.password ? errors.password?.message : ""}
+                  error={errors.password ? errors.password.message : ""}
+                />
+
+                <Textbox
+                  placeholder='Confirm your password'
+                  type='password'
+                  name='confirmPassword'
+                  label='Confirm Password'
+                  className='w-full rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 px-4 py-3 transition-colors'
+                  register={register("confirmPassword", {
+                    required: "Please confirm your password!",
+                    validate: (value) => value === password || "Passwords do not match!",
+                  })}
+                  error={errors.confirmPassword ? errors.confirmPassword.message : ""}
                 />
               </div>
 
               <div className='flex items-center justify-between text-sm'>
                 <label className='flex items-center gap-2 cursor-pointer text-gray-600 dark:text-gray-400'>
                   <input type='checkbox' className='w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500' />
-                  <span>Remember me</span>
+                  <span>I agree to the Terms of Service and Privacy Policy</span>
                 </label>
-                <a href='#' className='text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium'>
-                  Forgot password?
-                </a>
               </div>
 
               {isLoading ? (
@@ -145,7 +187,7 @@ const Login = () => {
               ) : (
                 <Button
                   type='submit'
-                  label='Sign In'
+                  label='Sign Up'
                   className='w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/50 transition-all duration-200 transform hover:scale-[1.02]'
                 />
               )}
@@ -156,7 +198,7 @@ const Login = () => {
                 </div>
                 <div className='relative flex justify-center text-sm'>
                   <span className='px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400'>
-                    or continue with
+                    or sign up with
                   </span>
                 </div>
               </div>
@@ -186,13 +228,16 @@ const Login = () => {
               </div>
 
               <p className='text-center text-sm text-gray-600 dark:text-gray-400'>
-                Don't have an account?{' '}
+                Already have an account?{' '}
                 <a 
-                  href='/sign-up' 
+                  href='/login' 
                   className='text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold'
-                  onClick={handleSignUp}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/login');
+                  }}
                 >
-                  Sign up for free
+                  Sign in here
                 </a>
               </p>
             </form>
@@ -203,4 +248,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
