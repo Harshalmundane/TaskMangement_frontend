@@ -94,7 +94,7 @@ const Users = () => {
         <th className='py-2'>Title</th>
         <th className='py-2'>Email</th>
         <th className='py-2'>Role</th>
-      
+        <th className='py-2'>Admin</th>
         <th className='py-2'>Active</th>
       </tr>
     </thead>
@@ -115,7 +115,18 @@ const Users = () => {
       <td className='p-2'>{user.title}</td>
       <td className='p-2'>{user.email}</td>
       <td className='p-2'>{user.role}</td>
-     
+      <td className='p-2'>
+        <span
+          className={clsx(
+            "w-fit px-4 py-1 rounded-full text-sm",
+            user?.isAdmin
+              ? "bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200"
+              : "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200"
+          )}
+        >
+          {user?.isAdmin ? "Yes" : "No"}
+        </span>
+      </td>
       <td>
         <button
           onClick={() => userStatusClick(user)}
