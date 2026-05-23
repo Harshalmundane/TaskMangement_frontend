@@ -170,7 +170,10 @@ const Users = () => {
             label='Add New User'
             icon={<IoMdAdd className='text-lg' />}
             className='flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md 2xl:py-2.5'
-            onClick={() => setOpen(true)}
+             onClick={() => {
+              setSelected(null);
+              setOpen(true);
+            }}
           />
         </div>
         <div className='bg-white dark:bg-[#1f1f1f] px-2 md:px-4 py-4 shadow rounded'>
